@@ -14,5 +14,10 @@ interface IWorldID {
 /// @title DAO
 /// @notice A DAO contract for a crowdfunding platform using governance tokens and World ID verification.
 contract DAO is Ownable {
+    using SafeMath for unit256;
+
+    GovernanceToken public governanceToken;
+    IWorldID public worldID;
+
 }
 
