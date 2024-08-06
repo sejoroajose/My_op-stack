@@ -19,5 +19,24 @@ contract DAO is Ownable {
     GovernanceToken public governanceToken;
     IWorldID public worldID;
 
+
+    //Campaign structure
+    struct Campaign {
+        address creator;
+        string description;
+        uint256 fundingGoal;
+        uint256 deadline;
+        uint256 totalContributions;
+        address beneficiary;
+        bool isVerified;
+        bool isWithdrawn;
+        mapping(address => uint256) contributions;
+        mapping(address => bool) hasVoted;
+        uint256 votesFor;
+        uint256 votesAgainst;
+    }
+
+
+
 }
 
