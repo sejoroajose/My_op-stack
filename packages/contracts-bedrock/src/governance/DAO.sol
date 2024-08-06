@@ -37,6 +37,13 @@ contract DAO is Ownable {
     }
 
 
+    Campaign[] public campaigns;
 
+    //Events Creation
+    event CampaignCreated(uint256 indexed campaignId, address creator, string description, uint256 fundingGoal, uint256 deadline);
+    event Contributed(uint256 indexed campaignId, address contributor, uint256 amount);
+    event Voted(uint256 indexed campaignId, address voter, bool support);
+    event CampaignFinalized(uint256 indexed campaignId, bool success);
+    event Withdrawn(uint256 indexed campaignId, address beneficiary, uint256 amount);
 }
 
