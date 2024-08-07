@@ -77,5 +77,87 @@ contract DAO is Ownable {
         _;
     }
 
+    /// @notice Contributes to a campaign.
+    /// @param _campaignId ID of the campaign.
+
+    function contribute(uint256 _campaignId) external payable campaignExists(_campaignId) campaignOpen(_campaignId) {
+        require(msg.value > 0, "BoostDAO: Contribution must be greater than zero");
+
+        Campaign storage campaign = campaigns[_campaignId];
+        campaign.contributions[msg.sender] = campaign.contributions[msg.sender].add(msg.value);
+        emit Contributed(_campaignId, msg.sender, msg.value);
+    }
+
+
+    /// Votes on campaign proposal.
+    /// @param _campaignId ID of the campaign
+    /// @param _support True for supporting the beneficiary withdrawal, false for opposing.
+
+    function vote(uint256 _campaignId, bool _support) external hasContributed(_campaignId) hasNotVoted(_campaignId) campaignClosed(_campaignId){
+        Campaign storage campaign = campaigns[_campaignId];
+        uint256 voterVotes = governanceToken.getVotes(msg.sender);
+
+        if (_support) {
+            campaign.votesFor = campaign.votesFor.add(voterVotes);
+        } else {
+            campaign.votesAgainst = campaign.votesAgainst.add(voterVotes);
+        }
+
+        campaign.hasVoted[msg.sender] = true;
+        emit Voted(_campaignId, msg.sender, _support);
+
+    }
+
+    /// Set the beneficiary address for a campaign.
+    /// @param _campaignId of the campaign.
+    /// @param _beneficiary The address that will recieve the campaign funds
+
+    function setBeneficiary(uint256 _campaignId, address _beneficiary) external campaignExists(_campaignId) {
+        Campaign storage campaign = campaigns[_campaignId];
+        require(msg.sender == campaign.creator, "BoostDAO: Only the campaign Creator can set beneficiary");
+        require(campaign.beneficiary == address(0), "BoostDAO: Beneficiary already set")
+        campaign.beneficiary = _beneficiary;
+    }
+
+
+    /// @notice Finalizes a campaign and allows the beneficiary to withdraw funds in the campaign is approved.
+    /// @param _campaignId ID of the campaign.
+
+    function finalizeCampaign(uint256 _campaignId) external campaignExists(_campaignId) campaignClosed(_campaignId) {
+        Campaign storage campaign = campaigns[_campaignId];
+        require(!campaign.isWithdrawn, "BoostDAO: Campaign already finalized");
+
+
+        bool success = (campaign.votesFor * 2 >= governanceToken.totalSupply() && campaign.votesFor >= campaign.votesAgainst) || campaign.totalContributions >= campaign.fundingGoal;
+
+        if (success) {
+            uint256 amount = campaign.totalContributions;
+            (bool sent, ) = campaign.beneficiary.call{value: amount}("");
+            require(sent, "BoostDAO: Failed to send funds");
+            emit Withdrawn(_campaignId, campaign.beneficiary, amount);
+        }
+
+        campaign.isWithdrawn = true;
+        emit CampaignFinalized(_campaignId, success);
+    }
+
+
+    /// @notice Allows contributors to withdraw their contributions if they wish to pull out.
+    /// @param _capmpaignId ID of campaign.
+
+    function withdrawContribution(uint256 _campaignId) external campaignExists(_campaignId) campaignOpen(_campaignId) hasContributed(_campaignId) {
+        Campaign storage campaign = campaigns[_campaignId];
+        uint256 contribution = campaign.contributions[msg.sender];
+        require(contribution > 0, "BoostDAO: No contribution to withdraw");
+
+
+        campaign.contributions[msg.sender] = 0;
+        (bool sent, ) = msg.sender.call{value: contribution}("");
+        require(sent, "BoostDAO: Failed to withdraw contribution");
+        emit Contributed(_campaignId, msg.sender, -int256(contribution));
+    }
+
+    receive() external payable{}
+
 }
 
