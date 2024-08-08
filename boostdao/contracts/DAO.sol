@@ -4,7 +4,7 @@ pragma solidity 0.8.15;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../packages/contracts-bedrock/src/governance/GovernanceToken.sol";
+import "./GovernanceToken.sol";
 
 // Mock World ID verification interface
 interface IWorldID {
