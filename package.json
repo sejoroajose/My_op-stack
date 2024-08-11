@@ -22,5 +22,6 @@
     "print:slither": "slither --version",
     "check:slither": "[[ $(pnpm -s print:slither) = $(jq -r .slither < versions.json) ]] && echo '✓ slither versions match' || (echo '✗ slither version mismatch. Run `pnpm upgrade:slither` to upgrade.' && exit 1)",
     "upgrade:slither": "jq '.slither = $v' --arg v $(pnpm -s print:slither) <<<$(cat versions.json) > versions.json"
-  }
+  },
+  "packageManager": "pnpm@9.7.0+sha512.dc09430156b427f5ecfc79888899e1c39d2d690f004be70e05230b72cb173d96839587545d09429b55ac3c429c801b4dc3c0e002f653830a420fa2dd4e3cf9cf"
 }

@@ -25,7 +25,7 @@ contract DAO is Ownable {
 
     Campaign[] public campaigns;
 
-    event CampaignCreated(uint256 indexed campaignId, address creator, string description, uint256 fundingGoal, uint256 deadline);
+    event CampaignCreated(uint256 indexed campaignId, address creator, string description, uint256 fundingGoal, uint256 deadline, address beneficiary);
     event Contributed(uint256 indexed campaignId, address contributor, uint256 amount);
     event Voted(uint256 indexed campaignId, address voter, bool support);
     event CampaignFinalized(uint256 indexed campaignId, bool success);
@@ -60,9 +60,10 @@ contract DAO is Ownable {
         _;
     }
 
-    function createCampaign(string memory _description, uint256 _fundingGoal, uint256 _deadline) external {
+    function createCampaign(string memory _description, uint256 _fundingGoal, uint256 _deadline, address _beneficiary) external {
         require(_deadline > block.timestamp, "DAO: Deadline must be in the future");
         require(_fundingGoal > 0, "DAO: Funding goal must be greater than zero");
+        require(_beneficiary != address(0), "DAO: Beneficiary address cannot be zero");
 
         uint256 newCampaignId = campaigns.length;
         campaigns.push();
@@ -71,8 +72,9 @@ contract DAO is Ownable {
         newCampaign.description = _description;
         newCampaign.fundingGoal = _fundingGoal;
         newCampaign.deadline = _deadline;
+        newCampaign.beneficiary = _beneficiary;
 
-        emit CampaignCreated(newCampaignId, msg.sender, _description, _fundingGoal, _deadline);
+        emit CampaignCreated(newCampaignId, msg.sender, _description, _fundingGoal, _deadline, _beneficiary);
     }
 
     function contribute(uint256 _campaignId) external payable campaignExists(_campaignId) campaignOpen(_campaignId) {
@@ -98,12 +100,6 @@ contract DAO is Ownable {
         emit Voted(_campaignId, msg.sender, _support);
     }
 
-    function setBeneficiary(uint256 _campaignId, address _beneficiary) external campaignExists(_campaignId) {
-        Campaign storage campaign = campaigns[_campaignId];
-        require(msg.sender == campaign.creator, "DAO: Only the campaign Creator can set beneficiary");
-        require(campaign.beneficiary == address(0), "DAO: Beneficiary already set");
-        campaign.beneficiary = _beneficiary;
-    }
 
     function finalizeCampaign(uint256 _campaignId) external campaignExists(_campaignId) campaignClosed(_campaignId) {
         Campaign storage campaign = campaigns[_campaignId];

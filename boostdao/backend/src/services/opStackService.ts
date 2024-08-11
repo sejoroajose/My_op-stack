@@ -1,5 +1,5 @@
 import { ethers, Contract, providers, Wallet } from 'ethers';
-// import DAO from '../../../artifacts/contracts/DAO.sol/DAO.json';
+import DAO from '../../../frontend/store/DAO.';
 
 interface Campaign {
   id: number;
